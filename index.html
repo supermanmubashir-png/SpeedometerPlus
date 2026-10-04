@@ -108,9 +108,9 @@
 
                     <!-- Speedometer Displays -->
                     <div id="speedometer-display" class="speedometer-display">
-                        <!-- Analogue Gauge -->
+                        <!-- Analogue Gauge (FIXED) -->
                         <div id="analogue-gauge" class="gauge-mode active">
-                            <svg class="gauge-svg" viewBox="0 0 300 300">
+                            <svg class="gauge-svg" viewBox="0 0 300 300" aria-label="Speedometer gauge">
                                 <defs>
                                     <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                         <stop offset="0%" class="gauge-gradient-start"></stop>
@@ -121,10 +121,13 @@
                                 <circle class="gauge-background" cx="150" cy="150" r="130"></circle>
                                 <g class="gauge-ticks"></g>
                                 <g class="gauge-labels"></g>
-                                <line class="gauge-needle" x1="150" y1="150" x2="150" y2="40"></line>
-                                <circle class="gauge-center" cx="150" cy="150" r="8"></circle>
-                                <text class="gauge-speed-value" x="150" y="180" text-anchor="middle">0</text>
-                                <text class="gauge-speed-unit" x="150" y="200" text-anchor="middle">km/h</text>
+                                <!-- Needle group starts at -135 degrees, rotates 0-270 degrees -->
+                                <g class="gauge-needle-group" transform="rotate(-135 150 150)">
+                                    <line class="gauge-needle" x1="150" y1="150" x2="150" y2="30"></line>
+                                </g>
+                                <circle class="gauge-center" cx="150" cy="150" r="10"></circle>
+                                <text class="gauge-speed-value" x="150" y="190" text-anchor="middle" dominant-baseline="middle">0</text>
+                                <text class="gauge-speed-unit" x="150" y="215" text-anchor="middle" dominant-baseline="middle">km/h</text>
                             </svg>
                         </div>
 
