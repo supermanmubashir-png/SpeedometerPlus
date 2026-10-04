@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="GPS-based Speedometer PWA - Real-time speed tracking with no backend required">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Speedometer">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/main.css">
+    <title>Speedometer</title>
+</head>
+<body>
+    <!-- Orientation Warning Overlay -->
+    <div id="orientation-warning" class="orientation-warning hidden">
+        <div class="orientation-content">
+            <svg class="orientation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="6" x2="12" y2="12"></line>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <p>Please rotate your device to portrait mode</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">Speedometer</h1>
+                <div class="header-actions">
+                    <button id="gps-status-btn" class="gps-status-btn" aria-label="GPS Status">
+                        <span class="gps-dot"></span>
+                        <span class="gps-text">Searching GPS...</span>
+                    </button>
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                        <svg class="theme-icon sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="theme-icon moon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <!-- Speed Tab -->
+            <section id="speed-tab" class="tab-content active">
+                <div class="speed-container">
+                    <!-- Mode Selector -->
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="analogue" aria-label="Analogue mode">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="12" x2="12" y2="6"></line>
+                            </svg>
+                            <span>Analogue</span>
+                        </button>
+                        <button class="mode-btn" data-mode="digital" aria-label="Digital mode">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                                <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none">88</text>
+                            </svg>
+                            <span>Digital</span>
+                        </button>
+                        <button class="mode-btn" data-mode="minimalist" aria-label="Minimalist mode">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="4" y1="12" x2="20" y2="12"></line>
+                            </svg>
+                            <span>Minimal</span>
+                        </button>
+                        <button class="mode-btn" data-mode="hud" aria-label="HUD mode">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3h18v18H3z"></path>
+                                <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none">HUD</text>
+                            </svg>
+                            <span>HUD</span>
+                        </button>
+                        <button class="mode-btn" data-mode="graph" aria-label="Graph mode">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 12 8 8 13 14 18 6 23 10"></polyline>
+                            </svg>
+                            <span>Graph</span>
+                        </button>
+                        <button class="mode-btn" data-mode="compass" aria-label="Compass mode">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polygon points="12 2 14 8 12 10 10 8"></polygon>
+                            </svg>
+                            <span>Compass</span>
+                        </button>
+                    </div>
+
+                    <!-- Speedometer Displays -->
+                    <div id="speedometer-display" class="speedometer-display">
+                        <!-- Analogue Gauge -->
+                        <div id="analogue-gauge" class="gauge-mode active">
+                            <svg class="gauge-svg" viewBox="0 0 300 300">
+                                <defs>
+                                    <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" class="gauge-gradient-start"></stop>
+                                        <stop offset="50%" class="gauge-gradient-mid"></stop>
+                                        <stop offset="100%" class="gauge-gradient-end"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="gauge-background" cx="150" cy="150" r="130"></circle>
+                                <g class="gauge-ticks"></g>
+                                <g class="gauge-labels"></g>
+                                <line class="gauge-needle" x1="150" y1="150" x2="150" y2="40"></line>
+                                <circle class="gauge-center" cx="150" cy="150" r="8"></circle>
+                                <text class="gauge-speed-value" x="150" y="180" text-anchor="middle">0</text>
+                                <text class="gauge-speed-unit" x="150" y="200" text-anchor="middle">km/h</text>
+                            </svg>
+                        </div>
+
+                        <!-- Digital Display -->
+                        <div id="digital-display" class="digital-mode">
+                            <div class="digital-speed-container">
+                                <span id="digital-speed" class="digital-speed">0</span>
+                                <span id="digital-unit" class="digital-unit">km/h</span>
+                            </div>
+                            <div class="digital-stats">
+                                <div class="digital-stat">
+                                    <span class="stat-label">AVG</span>
+                                    <span id="digital-avg" class="stat-value">0</span>
+                                </div>
+                                <div class="digital-stat">
+                                    <span class="stat-label">MAX</span>
+                                    <span id="digital-max" class="stat-value">0</span>
+                                </div>
+                                <div class="digital-stat">
+                                    <span class="stat-label">GPS</span>
+                                    <span id="digital-gps" class="stat-value">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Minimalist Display -->
+                        <div id="minimalist-display" class="minimalist-mode">
+                            <span id="minimal-speed" class="minimal-speed">0</span>
+                            <span id="minimal-unit" class="minimal-unit">km/h</span>
+                            <div id="minimal-gps-dot" class="minimal-gps-dot"></div>
+                        </div>
+
+                        <!-- HUD Display -->
+                        <div id="hud-display" class="hud-mode">
+                            <div class="hud-speed-container">
+                                <span id="hud-speed" class="hud-speed">0</span>
+                                <span id="hud-unit" class="hud-unit">km/h</span>
+                            </div>
+                            <div class="hud-indicator">
+                                <span id="hud-status" class="hud-status">GPS ACTIVE</span>
+                            </div>
+                        </div>
+
+                        <!-- Graph Display -->
+                        <div id="graph-display" class="graph-mode">
+                            <canvas id="speed-graph" class="speed-graph"></canvas>
+                            <div class="graph-overlay">
+                                <span id="graph-current-speed" class="graph-current-speed">0 km/h</span>
+                            </div>
+                        </div>
+
+                        <!-- Compass Display -->
+                        <div id="compass-display" class="compass-mode">
+                            <div class="compass-rose">
+                                <svg viewBox="0 0 200 200">
+                                    <circle class="compass-circle" cx="100" cy="100" r="90"></circle>
+                                    <text class="compass-n" x="100" y="30" text-anchor="middle">N</text>
+                                    <text class="compass-e" x="170" y="105" text-anchor="middle">E</text>
+                                    <text class="compass-s" x="100" y="180" text-anchor="middle">S</text>
+                                    <text class="compass-w" x="30" y="105" text-anchor="middle">W</text>
+                                    <polygon id="compass-arrow" class="compass-arrow" points="100,20 110,50 100,45 90,50"></polygon>
+                                </svg>
+                            </div>
+                            <div class="compass-speed">
+                                <span id="compass-speed-value" class="compass-speed-value">0</span>
+                                <span id="compass-speed-unit" class="compass-speed-unit">km/h</span>
+                            </div>
+                            <div id="compass-heading" class="compass-heading">--°</div>
+                        </div>
+                    </div>
+
+                    <!-- Overspeed Warning -->
+                    <div id="overspeed-warning" class="overspeed-warning hidden">
+                        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span class="warning-text">OVERSPEED!</span>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button id="quick-start-trip" class="quick-action-btn" aria-label="Start new trip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                            </svg>
+                            <span>Start Trip</span>
+                        </button>
+                        <button id="copy-speed-btn" class="quick-action-btn" aria-label="Copy speed">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trip Tab -->
+            <section id="trip-tab" class="tab-content">
+                <div class="trip-container">
+                    <!-- Trip Controls -->
+                    <div class="trip-controls">
+                        <div class="odometer-display">
+                            <span class="odometer-label">Lifetime</span>
+                            <span id="lifetime-distance" class="odometer-value">0.00</span>
+                            <span id="lifetime-unit" class="odometer-unit">km</span>
+                        </div>
+                        <div class="trip-buttons">
+                            <button id="start-trip-btn" class="trip-btn start-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <span>Start</span>
+                            </button>
+                            <button id="pause-trip-btn" class="trip-btn pause-btn hidden">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="6" y="4" width="4" height="16"></rect>
+                                    <rect x="14" y="4" width="4" height="16"></rect>
+                                </svg>
+                                <span>Pause</span>
+                            </button>
+                            <button id="resume-trip-btn" class="trip-btn resume-btn hidden">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <span>Resume</span>
+                            </button>
+                            <button id="stop-trip-btn" class="trip-btn stop-btn hidden">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="6" y="6" width="12" height="12"></rect>
+                                </svg>
+                                <span>Stop</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Trip Info -->
+                    <div id="active-trip-info" class="active-trip-info hidden">
+                        <div class="trip-stat-grid">
+                            <div class="trip-stat">
+                                <span class="trip-stat-label">Distance</span>
+                                <span id="trip-distance" class="trip-stat-value">0.00</span>
+                                <span id="trip-distance-unit" class="trip-stat-unit">km</span>
+                            </div>
+                            <div class="trip-stat">
+                                <span class="trip-stat-label">Duration</span>
+                                <span id="trip-duration" class="trip-stat-value">00:00:00</span>
+                            </div>
+                            <div class="trip-stat">
+                                <span class="trip-stat-label">Avg Speed</span>
+                                <span id="trip-avg-speed" class="trip-stat-value">0</span>
+                                <span class="trip-stat-unit">km/h</span>
+                            </div>
+                            <div class="trip-stat">
+                                <span class="trip-stat-label">Max Speed</span>
+                                <span id="trip-max-speed" class="trip-stat-value">0</span>
+                                <span class="trip-stat-unit">km/h</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trip List -->
+                    <div class="trip-list-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Trip History</h2>
+                            <div class="section-actions">
+                                <button id="filter-trips-btn" class="filter-btn" aria-label="Filter trips">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                </button>
+                                <button id="search-trips-btn" class="search-btn" aria-label="Search trips">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="trip-list" class="trip-list">
+                            <!-- Trip items will be inserted here -->
+                        </div>
+                        <div id="trip-list-empty" class="trip-list-empty hidden">
+                            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p>No trips yet. Start your first trip!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Tab -->
+            <section id="stats-tab" class="tab-content">
+                <div class="stats-container">
+                    <!-- Time Filter -->
+                    <div class="time-filter">
+                        <button class="filter-chip active" data-period="all">All Time</button>
+                        <button class="filter-chip" data-period="30d">30 Days</button>
+                        <button class="filter-chip" data-period="7d">7 Days</button>
+                        <button class="filter-chip" data-period="today">Today</button>
+                    </div>
+
+                    <!-- Overview Stats -->
+                    <div class="stats-overview">
+                        <div class="overview-card">
+                            <span class="overview-label">Total Distance</span>
+                            <span id="stats-total-distance" class="overview-value">0.00</span>
+                            <span id="stats-distance-unit" class="overview-unit">km</span>
+                        </div>
+                        <div class="overview-card">
+                            <span class="overview-label">Total Time</span>
+                            <span id="stats-total-time" class="overview-value">0h</span>
+                        </div>
+                        <div class="overview-card">
+                            <span class="overview-label">Total Trips</span>
+                            <span id="stats-total-trips" class="overview-value">0</span>
+                        </div>
+                        <div class="overview-card">
+                            <span class="overview-label">Avg Speed</span>
+                            <span id="stats-avg-speed" class="overview-value">0</span>
+                            <span class="overview-unit">km/h</span>
+                        </div>
+                        <div class="overview-card">
+                            <span class="overview-label">Max Speed</span>
+                            <span id="stats-max-speed" class="overview-value">0</span>
+                            <span class="overview-unit">km/h</span>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="stats-charts">
+                        <div class="chart-card">
+                            <h3 class="chart-title">Distance per Day</h3>
+                            <canvas id="distance-chart" class="stats-chart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">Speed Distribution</h3>
+                            <canvas id="speed-chart" class="stats-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Insights -->
+                    <div class="insights-section">
+                        <h3 class="insights-title">Insights</h3>
+                        <div class="insights-grid">
+                            <div class="insight-card">
+                                <span class="insight-label">Fastest Trip</span>
+                                <span id="insight-fastest" class="insight-value">--</span>
+                            </div>
+                            <div class="insight-card">
+                                <span class="insight-label">Longest Trip</span>
+                                <span id="insight-longest" class="insight-value">--</span>
+                            </div>
+                            <div class="insight-card">
+                                <span class="insight-label">Most Active Day</span>
+                                <span id="insight-active" class="insight-value">--</span>
+                            </div>
+                            <div class="insight-card">
+                                <span class="insight-label">Trips/Week</span>
+                                <span id="insight-trips-week" class="insight-value">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export -->
+                    <div class="export-section">
+                        <button id="export-stats-csv" class="export-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Export CSV</span>
+                        </button>
+                        <button id="export-stats-json" class="export-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Export JSON</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings-tab" class="tab-content">
+                <div class="settings-container">
+                    <!-- GPS Settings -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">GPS & Tracking</h3>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">High Accuracy Mode</span>
+                                <span class="settings-item-desc">Use precise GPS (more battery)</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="high-accuracy-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Auto-pause Threshold</span>
+                                <span class="settings-item-desc">Pause when stopped for N seconds</span>
+                            </div>
+                            <input type="number" id="auto-pause-threshold" class="settings-input" value="10" min="5" max="60">
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Min Accuracy Filter</span>
+                                <span class="settings-item-desc">Ignore GPS points worse than N meters</span>
+                            </div>
+                            <input type="number" id="min-accuracy-filter" class="settings-input" value="50" min="10" max="500">
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Speed Smoothing</span>
+                                <span class="settings-item-desc">Average over last N samples</span>
+                            </div>
+                            <input type="number" id="speed-smoothing" class="settings-input" value="5" min="1" max="20">
+                        </div>
+                        <button id="refresh-gps-btn" class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            <span>Refresh GPS</span>
+                        </button>
+                    </div>
+
+                    <!-- Speedometer Settings -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Speedometer</h3>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Gauge Max Speed</span>
+                                <span class="settings-item-desc">Maximum value on analogue gauge</span>
+                            </div>
+                            <select id="gauge-max-speed" class="settings-select">
+                                <option value="120">120 km/h</option>
+                                <option value="160" selected>160 km/h</option>
+                                <option value="200">200 km/h</option>
+                                <option value="240">240 km/h</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Color Theme</span>
+                                <span class="settings-item-desc">Gauge color scheme</span>
+                            </div>
+                            <select id="gauge-theme" class="settings-select">
+                                <option value="blue">Blue</option>
+                                <option value="red">Red</option>
+                                <option value="green">Green</option>
+                                <option value="purple">Purple</option>
+                                <option value="orange">Orange</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Needle Style</span>
+                                <span class="settings-item-desc">Analogue gauge needle</span>
+                            </div>
+                            <select id="needle-style" class="settings-select">
+                                <option value="classic">Classic</option>
+                                <option value="modern">Modern</option>
+                                <option value="dot">Dot</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Font Size</span>
+                                <span class="settings-item-desc">Digital display text size</span>
+                            </div>
+                            <input type="range" id="font-size-slider" class="settings-slider" min="24" max="72" value="48">
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">HUD Mirror Mode</span>
+                                <span class="settings-item-desc">Flip display horizontally</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="hud-mirror-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Units & Alarms -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Units & Alarms</h3>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Speed Units</span>
+                                <span class="settings-item-desc">Display speed in km/h or mph</span>
+                            </div>
+                            <div class="unit-toggle">
+                                <button class="unit-btn active" data-unit="kmh">km/h</button>
+                                <button class="unit-btn" data-unit="mph">mph</button>
+                            </div>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Speed Alarm</span>
+                                <span class="settings-item-desc">Alert when exceeding threshold</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="alarm-enable-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Alarm Threshold</span>
+                                <span class="settings-item-desc">Speed limit for alarm</span>
+                            </div>
+                            <input type="number" id="alarm-threshold" class="settings-input" value="40" min="10" max="200">
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Alarm Sound</span>
+                                <span class="settings-item-desc">Beep pattern</span>
+                            </div>
+                            <select id="alarm-sound" class="settings-select">
+                                <option value="single">Single Beep</option>
+                                <option value="double">Double Beep</option>
+                                <option value="continuous">Continuous</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Vibration</span>
+                                <span class="settings-item-desc">Haptic feedback on alarm</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="vibration-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <button id="test-alarm-btn" class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span>Test Alarm</span>
+                        </button>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Data Management</h3>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Database Size</span>
+                                <span id="db-size" class="settings-item-value">--</span>
+                            </div>
+                        </div>
+                        <button id="export-all-data" class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Export All Data</span>
+                        </button>
+                        <button id="import-data-btn" class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span>Import Data</span>
+                        </button>
+                        <input type="file" id="import-file-input" class="hidden" accept=".json">
+                        <button id="clear-all-data" class="settings-btn danger">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            <span>Clear All Data</span>
+                        </button>
+                    </div>
+
+                    <!-- Appearance -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Appearance</h3>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Theme</span>
+                                <span class="settings-item-desc">Light, dark, or auto</span>
+                            </div>
+                            <select id="theme-select" class="settings-select">
+                                <option value="auto">Auto</option>
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Accent Color</span>
+                                <span class="settings-item-desc">UI highlight color</span>
+                            </div>
+                            <input type="color" id="accent-color" class="settings-color" value="#6366f1">
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-content">
+                                <span class="settings-item-label">Reduced Motion</span>
+                                <span class="settings-item-desc">Minimize animations</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="reduced-motion-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- About -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">About</h3>
+                        <div class="about-info">
+                            <p class="about-version">Version 1.0.0</p>
+                            <p class="about-build">Build: October 2026</p>
+                            <p class="about-desc">GPS-based Speedometer PWA</p>
+                            <p class="about-note">All data stored locally in your browser. No backend required.</p>
+                        </div>
+                        <button id="privacy-policy-btn" class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <span>Privacy Policy</span>
+                        </button>
+                        <button id="help-faq-btn" class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span>Help & FAQ</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Floating Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="nav-container">
+                <button class="nav-item active" data-tab="speed" aria-label="Speed">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="12 6 16 14 8 14 12 6"></polygon>
+                    </svg>
+                    <span class="nav-label">Speed</span>
+                </button>
+                <button class="nav-item" data-tab="trip" aria-label="Trip">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span class="nav-label">Trip</span>
+                </button>
+                <button class="nav-item" data-tab="stats" aria-label="Stats">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span class="nav-label">Stats</span>
+                </button>
+                <button class="nav-item" data-tab="settings" aria-label="Settings">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span class="nav-label">Settings</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="modal-container hidden"></div>
+
+    <!-- Scripts -->
+    <script src="js/db.js"></script>
+    <script src="js/gps.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/trips.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
