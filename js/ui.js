@@ -1,6 +1,8 @@
 /**
  * Speedometer PWA - UI Handler
  * Manages speedometer displays, animations, and UI updates
+ * 
+ * FIXED: Gauge needle now rotates correctly from 0 to max speed
  */
 
 class UIHandler {
@@ -39,8 +41,8 @@ class UIHandler {
      */
     cacheElements() {
         this.elements = {
-            // Speed displays
-            gaugeNeedle: document.querySelector('.gauge-needle'),
+            // Speed displays - FIXED: Use needle group instead of needle
+            gaugeNeedleGroup: document.querySelector('.gauge-needle-group'),
             gaugeSpeedValue: document.querySelector('.gauge-speed-value'),
             gaugeSpeedUnit: document.querySelector('.gauge-speed-unit'),
             digitalSpeed: document.getElementById('digital-speed'),
@@ -99,8 +101,10 @@ class UIHandler {
      */
     applySettings() {
         // Needle style
-        if (this.elements.gaugeNeedle) {
-            this.elements.gaugeNeedle.className.baseVal = 'gauge-needle ' + this.settings.needleStyle;
+        const needleLine = document.querySelector('.gauge-needle');
+        if (needleLine) {
+            needleLine.classList.remove('classic', 'modern', 'dot');
+            needleLine.classList.add(this.settings.needleStyle);
         }
 
         // Font size
@@ -308,7 +312,7 @@ class UIHandler {
             const diff = this.targetSpeed - this.displaySpeed;
             this.displaySpeed += diff * 0.15;
 
-            // Update gauge needle
+            // Update gauge needle - FIXED
             this.updateGaugeNeedle();
 
             // Update graph if active
@@ -327,16 +331,21 @@ class UIHandler {
     }
 
     /**
-     * Update gauge needle position
+     * Update gauge needle position - FIXED
+     * Needle group starts at -135°, rotates 0-270° as speed goes from 0 to max
      */
     updateGaugeNeedle() {
-        if (!this.elements.gaugeNeedle) return;
+        if (!this.elements.gaugeNeedleGroup) return;
 
         const clampedSpeed = Math.min(Math.max(this.displaySpeed, 0), this.gaugeMaxSpeed);
-        const percentage = clampedSpeed / this.gaugeMaxSpeed;
-        const angle = -135 + (percentage * 270);
+        const progress = clampedSpeed / this.gaugeMaxSpeed;
 
-        this.elements.gaugeNeedle.style.transform = `rotate(${angle}deg)`;
+        // The SVG group is initially rotated to -135 degrees.
+        // Rotate only the sweep: 0 degrees at zero speed, 270 degrees at maximum speed.
+        const sweepAngle = progress * 270;
+
+        this.elements.gaugeNeedleGroup.style.transform = `rotate(${sweepAngle}deg)`;
+        this.elements.gaugeNeedleGroup.style.transformOrigin = '150px 150px';
 
         if (this.elements.gaugeSpeedValue) {
             this.elements.gaugeSpeedValue.textContent = Math.round(this.displaySpeed);
