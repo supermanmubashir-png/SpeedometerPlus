@@ -1,752 +1,292 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#6366f1">
-    <meta name="description" content="GPS-based Speedometer PWA - Real-time speed tracking with no backend required">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Speedometer">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link rel="stylesheet" href="css/main.css">
-    <title>Speedometer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speedometer+</title>
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="icon.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#0b0d12;--card:#161a22;--tx:#f2f4f8;--mu:#8a93a6;--ac:#3b9cff;
+--lt:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .02 0 0 0 1.4 -.4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+:root[data-theme=light]{--bg:#f2f3f7;--card:#fff;--tx:#14171f;--mu:#6b7385;--ac:#0a6cff}
+:root[data-theme=aviator]{--bg:#000;--card:#4b2c1c;--tx:#f4e4cc;--mu:#c8a684;--ac:#f0a24f}
+body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:500 16px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px 6px}
+h1{font-size:30px;margin:0;font-weight:700;letter-spacing:-.5px}
+.pill{border:0;border-radius:20px;padding:8px 14px;background:var(--card);color:var(--mu);font:600 13px system-ui}
+.pill.ok{color:#35d07f}
+main{flex:1;overflow:auto;padding:8px 16px 120px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border-radius:30px;padding:18px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{grid-template-columns:repeat(3,1fr)}
+.st{background:var(--card);border-radius:24px;padding:14px}.st b{display:block;font-size:22px}.st span{font-size:12px;color:var(--mu)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
+.row+.row{border-top:1px solid color-mix(in srgb,var(--mu) 25%,transparent)}
+button{font:inherit;color:inherit}
+.btn{border:0;border-radius:22px;padding:12px 18px;background:color-mix(in srgb,var(--ac) 20%,transparent);color:var(--ac);font-weight:700}
+.opt{border:2px solid transparent;border-radius:24px;padding:16px 10px;background:var(--card);font-weight:600}
+.opt.on{border-color:var(--ac);color:var(--ac)}
+.seg3{display:flex;background:color-mix(in srgb,var(--mu) 20%,transparent);border-radius:20px;padding:3px}.seg3 button{border:0;background:none;padding:7px 12px;border-radius:17px;color:var(--mu);font-weight:600}.seg3 button.on{background:var(--ac);color:#fff}
+.sw{appearance:none;width:52px;height:30px;border-radius:15px;background:color-mix(in srgb,var(--mu) 40%,transparent);position:relative;transition:.2s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.sw:checked{background:var(--ac)}.sw:checked::after{left:25px}
+input[type=range]{width:100%;accent-color:var(--ac)}input[type=number]{width:110px;border:0;border-radius:14px;padding:10px;background:color-mix(in srgb,var(--mu) 20%,transparent);color:var(--tx);font:inherit}
+nav{position:fixed;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));height:68px;border-radius:34px;background:color-mix(in srgb,var(--card) 78%,transparent);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);display:flex;padding:6px;gap:4px;box-shadow:0 8px 30px #0006;z-index:5}
+nav button{flex:1;border:0;background:none;color:var(--mu);border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;transition:background .25s,color .25s}
+nav button.on{background:color-mix(in srgb,var(--ac) 24%,transparent);color:var(--ac)}
+nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+:root[data-theme=aviator] .card,:root[data-theme=aviator] .st,:root[data-theme=aviator] .opt,:root[data-theme=aviator] .pill{background-image:var(--lt);background-blend-mode:multiply}
+:root[data-theme=aviator] nav{background:#3b2314 var(--lt);background-blend-mode:multiply;border:1px solid #1a0f08}
+#gauge{display:flex;justify-content:center;transition:filter .3s}#gauge svg{width:100%;max-width:440px;height:auto}
+#gauge.over{filter:hue-rotate(150deg) saturate(1.6)}
+.dg,.hud{text-align:center;padding:14px 0;width:100%}
+.dg b,.hud b{display:block;font:800 112px/1 ui-monospace,Menlo,monospace;text-shadow:0 0 24px var(--ac)}
+.dg i,.hud i,.lb i{font-style:normal;color:var(--mu)}
+.seg{display:flex;gap:3px;margin-top:18px}.seg u{flex:1;height:24px;border-radius:5px;background:color-mix(in srgb,var(--mu) 25%,transparent)}
+.seg u.on{background:var(--ac)}.seg u.on:nth-child(n+22){background:#ffb020}.seg u.on:nth-child(n+27){background:#ff4040}
+.hud{color:#39ff88;text-shadow:0 0 16px #39ff88;background:#000;border-radius:24px;transition:transform .3s}.hud b{text-shadow:none}.hud.mir{transform:scaleX(-1)}
+.lb{width:100%;padding:10px 0}.lb b{font:800 96px/1 system-ui;display:block;text-align:center}.lb i{display:block;text-align:center;margin-bottom:14px}
+.bar{height:36px;border-radius:18px;background:color-mix(in srgb,var(--mu) 22%,transparent);overflow:hidden}.bar span{display:block;height:100%;width:0;background:var(--ac);border-radius:18px}
+.av .bl{stroke:#1e90e8;fill:none}.av .bf{fill:#1e90e8}.av .wt{stroke:#f2f2f2}.av text{fill:#f2f2f2;font-family:system-ui,sans-serif;font-weight:700}
+.av .ot{fill:#fff}.av .ot.l{fill:#111}.av .gr{fill:#1d6b3a;stroke:#0b3d20;stroke-width:2}
+.av.lit .bl{stroke:#38d6ff;filter:drop-shadow(0 0 4px #1b6dff)}.av.lit .bf{fill:#38d6ff;filter:drop-shadow(0 0 5px #1b6dff)}
+.av.lit .wt{stroke:#c4ecff;filter:drop-shadow(0 0 3px #38a0ff)}.av.lit text{fill:#e6f7ff;filter:drop-shadow(0 0 3px #2a8bff)}
+.av.lit .face{fill:#050a22}.av.lit #bc2{fill:#1c52f0;filter:drop-shadow(0 0 6px #3a8bff)}.av.lit #ndl{filter:drop-shadow(0 0 3px #f22)}
+.av.lit .gr{fill:#25a25a}
+:root[data-theme=wagonr]{--bg:#000;--card:#151517;--tx:#fff;--mu:#a0a0a6;--ac:#fff}
+[data-theme=wagonr] .card,[data-theme=wagonr] .st,[data-theme=wagonr] .opt{background:linear-gradient(145deg,#2b2b2f,#0f0f11);border:1px solid #3d3d42;box-shadow:inset 0 1px 0 #ffffff22}
+[data-theme=wagonr] nav{background:linear-gradient(#242426,#0a0a0a);border:1px solid #444}
+[data-theme=wagonr] nav button.on{background:#fff;color:#000}
+[data-theme=wagonr] .seg3 button.on{color:#000}[data-theme=wagonr] .sw:checked::after{background:#000}
+[data-theme=wagonr] .btn{background:#fff;color:#000}[data-theme=wagonr] .opt.on{border-color:#fff}
+.wr text{font-family:system-ui,sans-serif}.wr .wb{stroke:#dfe6ff;fill:none}.wr .wt{stroke:#e9eeff}.wr .wn{fill:#ffd9b8;font-weight:600}.wr .rt{fill:#ff5a4a;font-weight:700}.wr .rd{stroke:#ff3b2f;fill:none}
+.wr .lc{fill:#2b2d26;font-family:ui-monospace,Menlo,monospace}
+.wr .wb,.wr .wt{filter:drop-shadow(0 0 3px #7fa0ff)}.wr .wn{filter:drop-shadow(0 0 3px #ff9a4a)}.wr #wi{filter:drop-shadow(0 0 4px #f22)}
+.wr.off .wb,.wr.off .wt{stroke:#4a4d58;filter:none}.wr.off .wn{fill:#6e5a48;filter:none}.wr.off .rt,.wr.off .rd,.wr.off #wi{opacity:.5;filter:none}
+:root[data-theme=activa]{--bg:#1d2126;--card:#2c323a;--tx:#eef2f6;--mu:#9aa6b4;--ac:#6699CC}
+[data-theme=activa] .card,[data-theme=activa] .st,[data-theme=activa] .opt{background:linear-gradient(145deg,#3d4651,#262b32);border:1px solid #4f5a66;box-shadow:inset 0 1px 0 #ffffff1f,0 6px 16px #0005}
+[data-theme=activa] nav{background:linear-gradient(#3a424c,#20252b);border:1px solid #55606c}
+[data-theme=activa] .opt.on{border-color:#6699CC}
+.ac text{font-family:system-ui,sans-serif;font-weight:700}.ac .an{fill:#e8eaee}.ac .ot{fill:#fff}.ac .ot.l{fill:#111}.ac .ia{fill:#2f4a3c}.ac .ib{stroke:#3d63ad;fill:none}
+.ac.lit .lens{fill:#0f1c33}.ac.lit .sg,.ac.lit .fs{filter:drop-shadow(0 0 4px #9fd0ff)}.ac.lit .an{fill:#fff;filter:drop-shadow(0 0 3px #7fbcff)}
+.ac.lit .ia{fill:#35e08a;filter:drop-shadow(0 0 4px #35e08a)}.ac.lit .ib{stroke:#4aa8ff;filter:drop-shadow(0 0 4px #2a88ff)}
+.tag{font-size:13px;color:var(--mu)}
+</style>
 </head>
 <body>
-    <!-- Orientation Warning Overlay -->
-    <div id="orientation-warning" class="orientation-warning hidden">
-        <div class="orientation-content">
-            <svg class="orientation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                <line x1="12" y1="6" x2="12" y2="12"></line>
-                <line x1="12" y1="18" x2="12.01" y2="18"></line>
-            </svg>
-            <p>Please rotate your device to portrait mode</p>
-        </div>
-    </div>
+<div id="app">
+<header><h1 id="ttl">Speed</h1><button class="pill" id="gps">GPS off</button></header>
+<main>
+<section id="t0" class="on">
+ <div class="card"><div id="gauge"></div></div>
+ <div class="grid g3">
+  <div class="st"><b data-s="max">0</b><span>Top speed</span></div>
+  <div class="st"><b data-s="avg">0</b><span>Average</span></div>
+  <div class="st"><b data-s="dist">0</b><span>Trip distance</span></div>
+ </div>
+ <p class="tag" id="hint" style="text-align:center"></p>
+</section>
+<section id="t1">
+ <div class="grid" id="sg2"></div>
+ <div class="card" style="margin-top:12px"><span class="tag">Last 90 seconds</span>
+  <svg viewBox="0 0 300 80" style="width:100%;height:90px"><polyline id="spk" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" points=""/></svg></div>
+ <button class="btn" onclick="resetTrip()">Reset trip</button>
+</section>
+<section id="t2">
+ <div class="tag" style="margin:0 6px 8px">Speedometer style</div>
+ <div class="grid" id="sl"></div>
+ <div class="tag" style="margin:16px 6px 8px">Theme</div>
+ <div class="grid" id="tl"></div>
+ <p class="tag" style="margin:14px 6px">Aviator turns the Classic style into the rider cluster. Tap the beam icon on it to switch the backlight. WagonR gives a polished black and white UI and the car cluster; tap its red warning icon to turn the backlight off. Activa gives a polished grey and blue-grey UI with the scooter cluster; its beam icon switches the backlight on.</p>
+</section>
+<section id="t3">
+ <div class="card">
+  <div class="row"><span>Units</span><div class="seg3" id="ul"></div></div>
+  <div class="row"><span>Speed alert</span><b id="lv">Off</b></div>
+  <input type="range" id="lim" min="0" max="200" step="5">
+  <div class="row"><span>Keep screen on</span><input class="sw" type="checkbox" id="wk"></div>
+  <div class="row"><span>Simulate drive</span><input class="sw" type="checkbox" id="sm"></div>
+  <div class="row"><span>Fuel level</span><b id="fv"></b></div>
+  <input type="range" id="fu" min="0" max="100">
+  <div class="row"><span>Odometer (km)</span><span><input type="number" id="oin" step="0.1"> <button class="btn" onclick="setOdo()">Set</button></span></div>
+ </div>
+ <p class="tag" style="margin:0 8px">The odometer grows with real GPS distance and is saved on this device.</p>
+</section>
+</main>
+<nav id="nav">
+ <button data-i="0"><svg viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/></svg>Speed</button>
+ <button data-i="1"><svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg>Trip</button>
+ <button data-i="2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Styles</button>
+ <button data-i="3"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Settings</button>
+</nav>
+</div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const U={kmh:{f:3.6,l:'km/h',m:180,d:.001,dl:'km'},mph:{f:2.23694,l:'mph',m:120,d:.000621371,dl:'mi'},kn:{f:1.94384,l:'kn',m:100,d:.000539957,dl:'nm'}};
+let S={style:0,theme:matchMedia('(prefers-color-scheme: light)').matches?'light':'dark',unit:'kmh',limit:0,sim:false,wake:false,lit:false,bl:true,al:false,fuel:60,odo:26649.2,tr:{d:0,t:0,mt:0,mx:0}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('spx')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('spx',JSON.stringify(S))}catch(e){}};
+const G={tv:0,last:null,alt:null,hd:null,acc:null,hist:[],status:'GPS off'};
+const P=(c,r,a)=>[c+r*Math.cos(a*Math.PI/180),c+r*Math.sin(a*Math.PI/180)];
+const cu=()=>U[S.unit],hms=s=>[s/3600|0,(s/60|0)%60,s%60|0].map(x=>String(x).padStart(2,'0')).join(':');
+function ap(cx,cy,r,a1,a2){const x1=cx+r*Math.cos(a1*Math.PI/180),y1=cy+r*Math.sin(a1*Math.PI/180),x2=cx+r*Math.cos(a2*Math.PI/180),y2=cy+r*Math.sin(a2*Math.PI/180);return`M${x1} ${y1}A${r} ${r} 0 ${a2-a1>180?1:0} 1 ${x2} ${y2}`}
+const vib=()=>{try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}};
 
-    <!-- Main App Container -->
-    <div id="app" class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-content">
-                <h1 class="app-title">Speedometer</h1>
-                <div class="header-actions">
-                    <button id="gps-status-btn" class="gps-status-btn" aria-label="GPS Status">
-                        <span class="gps-dot"></span>
-                        <span class="gps-text">Searching GPS...</span>
-                    </button>
-                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
-                        <svg class="theme-icon sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                        <svg class="theme-icon moon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </header>
+/* ---------- Speedometer styles ---------- */
+const NAMES=['Classic','Digital','Arc','Bar','Ring','HUD'];
+const B=[
+M=>{const st=M==180?20:10;let h='<svg viewBox="0 0 300 300"><circle cx="150" cy="150" r="146" fill="var(--bg)" stroke="var(--ac)" stroke-width="3"/>';
+ for(let i=0;i<=M;i+=st/2){const a=135+270*i/M,mj=i%st==0,[x1,y1]=P(150,mj?112:120,a),[x2,y2]=P(150,132,a);
+  h+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${i>M*.8?'#ff4d4d':mj?'var(--tx)':'var(--mu)'}" stroke-width="${mj?3.5:1.6}"/>`;
+  if(mj){const[tx,ty]=P(150,92,a);h+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="var(--tx)">${i}</text>`}}
+ return h+`<text id="cn" x="150" y="210" text-anchor="middle" font-size="40" font-weight="800" fill="var(--tx)">0</text><text x="150" y="232" text-anchor="middle" font-size="12" fill="var(--mu)">${cu().l}</text><g id="nd"><path d="M138 150L148 145L240 150L148 155Z" fill="#ff3b30"/></g><circle cx="150" cy="150" r="10" fill="var(--tx)"/></svg>`},
+M=>`<div class="dg"><b id="dn">0</b><i>${cu().l}</i><div class="seg">${'<u></u>'.repeat(30)}</div></div>`,
+M=>`<svg viewBox="0 0 300 250"><path d="${ap(150,140,110,135,405)}" pathLength="100" fill="none" stroke="var(--mu)" stroke-opacity=".25" stroke-width="22" stroke-linecap="round"/><path id="ar" d="${ap(150,140,110,135,405)}" pathLength="100" fill="none" stroke="var(--ac)" stroke-width="22" stroke-linecap="round" stroke-dasharray="0 100"/><text id="an" x="150" y="150" text-anchor="middle" font-size="76" font-weight="800" fill="var(--tx)">0</text><text x="150" y="182" text-anchor="middle" font-size="16" fill="var(--mu)">${cu().l}</text></svg>`,
+M=>`<div class="lb"><b id="ln">0</b><i>${cu().l}</i><div class="bar"><span id="lf"></span></div></div>`,
+M=>`<svg viewBox="0 0 300 300"><circle cx="150" cy="150" r="118" fill="none" stroke="var(--mu)" stroke-opacity=".25" stroke-width="10"/><circle id="rg" cx="150" cy="150" r="118" fill="none" stroke="var(--ac)" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 150 150)"/><text id="rn" x="150" y="170" text-anchor="middle" font-size="88" font-weight="300" fill="var(--tx)">0</text><text x="150" y="205" text-anchor="middle" font-size="16" fill="var(--mu)">${cu().l}</text></svg>`,
+M=>`<div class="hud" id="hd" onclick="this.classList.toggle('mir')"><b id="hn">0</b><i>${cu().l} - tap to mirror</i></div>`];
+const Us=[
+M=>{const nd=$('#nd'),c=$('#cn');return v=>{nd.setAttribute('transform',`rotate(${135+270*Math.min(v,M*1.02)/M} 150 150)`);c.textContent=Math.round(v)}},
+M=>{const n=$('#dn'),s=$$('.seg u');return v=>{n.textContent=Math.round(v);const k=Math.round(30*Math.min(v,M)/M);s.forEach((u,i)=>u.classList.toggle('on',i<k))}},
+M=>{const a=$('#ar'),n=$('#an');return v=>{a.setAttribute('stroke-dasharray',`${Math.min(v/M,1)*100} 100`);n.textContent=Math.round(v)}},
+M=>{const n=$('#ln'),f=$('#lf');return v=>{n.textContent=Math.round(v);f.style.width=Math.min(v/M,1)*100+'%'}},
+M=>{const r=$('#rg'),n=$('#rn');return v=>{r.setAttribute('stroke-dasharray',`${Math.min(v/M,1)*100} 100`);n.textContent=Math.round(v)}},
+M=>{const n=$('#hn');return v=>{n.textContent=Math.round(v)}}];
 
-        <!-- Main Content Area -->
-        <main id="main-content" class="main-content">
-            <!-- Speed Tab -->
-            <section id="speed-tab" class="tab-content active">
-                <div class="speed-container">
-                    <!-- Mode Selector -->
-                    <div class="mode-selector">
-                        <button class="mode-btn active" data-mode="analogue" aria-label="Analogue mode">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="12" x2="12" y2="6"></line>
-                            </svg>
-                            <span>Analogue</span>
-                        </button>
-                        <button class="mode-btn" data-mode="digital" aria-label="Digital mode">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-                                <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none">88</text>
-                            </svg>
-                            <span>Digital</span>
-                        </button>
-                        <button class="mode-btn" data-mode="minimalist" aria-label="Minimalist mode">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="4" y1="12" x2="20" y2="12"></line>
-                            </svg>
-                            <span>Minimal</span>
-                        </button>
-                        <button class="mode-btn" data-mode="hud" aria-label="HUD mode">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 3h18v18H3z"></path>
-                                <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none">HUD</text>
-                            </svg>
-                            <span>HUD</span>
-                        </button>
-                        <button class="mode-btn" data-mode="graph" aria-label="Graph mode">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 12 8 8 13 14 18 6 23 10"></polyline>
-                            </svg>
-                            <span>Graph</span>
-                        </button>
-                        <button class="mode-btn" data-mode="compass" aria-label="Compass mode">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polygon points="12 2 14 8 12 10 10 8"></polygon>
-                            </svg>
-                            <span>Compass</span>
-                        </button>
-                    </div>
+/* ---------- Aviator cluster ---------- */
+const BODY='M28 56Q28 26 58 26H342Q372 26 372 56V252Q372 292 340 318L228 380Q200 395 172 380L60 318Q28 292 28 252Z';
+const FACE='M50 66Q50 48 68 48H332Q350 48 350 66V246Q350 274 326 296L222 352Q200 364 178 352L74 296Q50 274 50 246Z';
+const bA=()=>{let h=`<svg id="av" class="av" viewBox="0 0 400 392"><defs><clipPath id="bcp"><path d="${BODY}"/></clipPath><filter id="lf"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3"/><feColorMatrix values="0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .02 0 0 0 1.4 -.4"/></filter></defs>
+<path d="${BODY}" fill="#5b3724"/><g clip-path="url(#bcp)"><rect width="400" height="400" filter="url(#lf)"/></g><path d="${BODY}" fill="none" stroke="#1d110a" stroke-width="3"/>
+<path class="face" d="${FACE}" fill="#07090d" stroke="#000" stroke-width="5"/>
+<path class="bf" d="M70 270Q112 276 138 322Q98 312 70 270Z"/><path class="bf" d="M330 270Q288 276 262 322Q302 312 330 270Z"/>
+<path class="bl" d="${ap(200,185,119,175,365)}" stroke-width="6"/><path class="wt" d="${ap(200,185,104,175,365)}" fill="none" stroke-width="1.4"/>`;
+ for(let i=0;i<=120;i+=10){const a=175+190*i/120,mj=i%20==0,[x1,y1]=P(0,0,0),p1=[200+(mj?96:101)*Math.cos(a*Math.PI/180),185+(mj?96:101)*Math.sin(a*Math.PI/180)],p2=[200+(mj?124:112)*Math.cos(a*Math.PI/180),185+(mj?124:112)*Math.sin(a*Math.PI/180)];
+  h+=`<line class="wt" x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke-width="${mj?5:2}"/>`;
+  if(mj){const q=[200+80*Math.cos(a*Math.PI/180),185+80*Math.sin(a*Math.PI/180)];h+=`<text x="${q[0]}" y="${q[1]}" text-anchor="middle" dominant-baseline="middle" font-size="15">${i}</text>`}}
+ h+=`<circle class="bl" cx="200" cy="185" r="60" stroke-width="1.6"/><text x="200" y="236" text-anchor="middle" font-size="11">${cu().l}</text>`;
+ for(let i=0;i<6;i++)h+=`<rect x="${165.5+i*11.5}" y="201" width="11.5" height="17" fill="${i==5?'#f1d9a5':'#101010'}" stroke="#555" stroke-width=".6"/><text class="ot${i==5?' l':''}" x="${171.25+i*11.5}" y="214" text-anchor="middle" font-size="12">0</text>`;
+ h+=`<g id="ndl"><path d="M186 185L196 180L316 185L196 190Z" fill="#ff2a1a"/></g><rect x="189" y="174" width="22" height="22" rx="7" fill="#111" stroke="#2c2c2c" stroke-width="2"/>
+<path class="gr" d="M316 82V106L338 94Z"/><path class="gr" d="M86 226V250L64 238Z"/>
+<g id="beam" style="cursor:pointer"><circle cx="82" cy="98" r="32" fill="transparent"/><circle id="bc2" cx="82" cy="98" r="18" fill="#0e3a8a"/><path d="M80 90h2a8 8 0 0 1 0 16h-2z" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M74 91h-6M74 98h-7M74 105h-6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>`;
+ for(let i=0;i<5;i++){const a=205+130*i/4,x1=200+36*Math.cos(a*Math.PI/180),y1=318+36*Math.sin(a*Math.PI/180),x2=200+44*Math.cos(a*Math.PI/180),y2=318+44*Math.sin(a*Math.PI/180);h+=`<line class="wt" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${i%2?1.6:3}"/>`}
+ h+=`<path d="${ap(200,318,40,205,222)}" fill="none" stroke="#e22" stroke-width="4"/><text x="158" y="338" text-anchor="middle" font-size="12">E</text><text x="242" y="338" text-anchor="middle" font-size="12">F</text>
+<circle class="bl" cx="200" cy="318" r="22" fill="#0d0f14" stroke-width="2"/><rect x="195" y="304" width="10" height="28" rx="4" fill="#25272c" transform="rotate(40 200 318)"/>
+<g id="fn"><path d="M204 316L240 316L240 320L204 320Z" fill="#ff2a1a"/></g></svg>`;return h};
+const uA=()=>{const nd=$('#ndl'),fn=$('#fn'),av=$('#av'),ot=$$('#av .ot');let po='';
+ av.classList.toggle('lit',S.lit);
+ $('#beam').onclick=()=>{S.lit=!S.lit;save();av.classList.toggle('lit',S.lit);vib()};
+ return v=>{nd.setAttribute('transform',`rotate(${175+190*Math.min(v,124)/120} 200 185)`);fn.setAttribute('transform',`rotate(${205+130*S.fuel/100} 200 318)`);
+  const o=String(Math.floor(S.odo*10)).padStart(6,'0').slice(-6);if(o!=po){po=o;ot.forEach((t,i)=>t.textContent=o[i])}}};
 
-                    <!-- Speedometer Displays -->
-                    <div id="speedometer-display" class="speedometer-display">
-                        <!-- Analogue Gauge (FIXED) -->
-                        <div id="analogue-gauge" class="gauge-mode active">
-                            <svg class="gauge-svg" viewBox="0 0 300 300" aria-label="Speedometer gauge">
-                                <defs>
-                                    <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" class="gauge-gradient-start"></stop>
-                                        <stop offset="50%" class="gauge-gradient-mid"></stop>
-                                        <stop offset="100%" class="gauge-gradient-end"></stop>
-                                    </linearGradient>
-                                </defs>
-                                <circle class="gauge-background" cx="150" cy="150" r="130"></circle>
-                                <g class="gauge-ticks"></g>
-                                <g class="gauge-labels"></g>
-                                <!-- Needle group starts at -135 degrees, rotates 0-270 degrees -->
-                                <g class="gauge-needle-group" transform="rotate(-135 150 150)">
-                                    <line class="gauge-needle" x1="150" y1="150" x2="150" y2="30"></line>
-                                </g>
-                                <circle class="gauge-center" cx="150" cy="150" r="10"></circle>
-                                <text class="gauge-speed-value" x="150" y="190" text-anchor="middle" dominant-baseline="middle">0</text>
-                                <text class="gauge-speed-unit" x="150" y="215" text-anchor="middle" dominant-baseline="middle">km/h</text>
-                            </svg>
-                        </div>
+/* ---------- WagonR cluster ---------- */
+const bW=()=>{const Q=(r,a,cx=200,cy=128)=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)];
+ let h=`<svg id="wr" class="wr" viewBox="0 0 400 240"><defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2a2e"/><stop offset="1" stop-color="#08080a"/></linearGradient></defs>
+<rect x="4" y="4" width="392" height="232" rx="34" fill="url(#wg)" stroke="#3a3a3e" stroke-width="2"/><rect x="14" y="62" width="76" height="148" rx="30" fill="#0b0b0d"/><rect x="310" y="62" width="76" height="148" rx="30" fill="#0b0b0d"/>
+<path class="wb" d="${ap(200,128,100,150,373)}" stroke-width="9"/>`;
+ for(let i=0;i<=180;i+=10){const a=150+223*i/180,mj=i%20==0,p=Q(mj?80:86,a),q=Q(92,a);h+=`<line class="wt" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke-width="${mj?3:1.5}"/>`;
+  if(mj){const t=Q(62,a);h+=`<text class="wn" x="${t[0]}" y="${t[1]}" text-anchor="middle" dominant-baseline="middle" font-size="14">${i}</text>`}}
+ h+=`<text class="wn" x="200" y="100" text-anchor="middle" font-size="10">${cu().l}</text>
+<path class="wb" d="${ap(48,138,34,-60,60)}" stroke-width="5"/><path class="rd" d="${ap(48,138,34,-60,-38)}" stroke-width="5"/><text class="rt" x="56" y="108" text-anchor="end" font-size="12">H</text><text class="wn" x="56" y="176" text-anchor="end" font-size="12">C</text>
+<path class="wb" d="${ap(354,138,34,125,235)}" stroke-width="5"/><path class="rd" d="${ap(354,138,34,125,142)}" stroke-width="5"/><text class="wn" x="348" y="104" text-anchor="middle" font-size="12">F</text><text class="wn" x="348" y="178" text-anchor="middle" font-size="12">E</text>
+<g transform="rotate(35 48 138)"><path d="M48 135L82 138L48 141Z" fill="#d8d0bc"/></g><circle cx="48" cy="138" r="9" fill="#c9c1ae"/>
+<g id="wfn"><path d="M354 135L388 138L354 141Z" fill="#d8d0bc"/></g><circle cx="354" cy="138" r="9" fill="#c9c1ae"/>
+<g id="wi" style="cursor:pointer" transform="translate(348 80)"><circle r="26" fill="transparent"/><circle r="5" fill="none" stroke="#ff3b2f" stroke-width="2"/><path d="M-9 -8a12 12 0 0 0 0 16M9 -8a12 12 0 0 1 0 16" fill="none" stroke="#ff3b2f" stroke-width="2.5" stroke-linecap="round"/></g>
+<rect x="166" y="170" width="68" height="22" rx="3" fill="#b4b7a8" stroke="#555"/><text class="wn" x="168" y="167" font-size="7">ODO</text><text class="wn" x="238" y="189" font-size="9">Km</text>
+<text class="lc" id="lcd" x="171" y="186" font-size="13">000000</text><text class="lc" id="lcd2" x="223" y="186" font-size="9">0</text>
+<g id="wnd"><path d="M190 125L296 128L190 131Z" fill="#d8d0bc"/></g><circle cx="200" cy="128" r="13" fill="#c9c1ae" stroke="#6d675a" stroke-width="2"/></svg>`;return h};
+const uW=()=>{const nd=$('#wnd'),fn=$('#wfn'),sv=$('#wr'),l1=$('#lcd'),l2=$('#lcd2');let po='';
+ const sync=()=>sv.classList.toggle('off',!S.bl);sync();
+ $('#wi').onclick=()=>{S.bl=!S.bl;save();sync();vib()};
+ return v=>{nd.setAttribute('transform',`rotate(${150+223*Math.min(v,185)/180} 200 128)`);fn.setAttribute('transform',`rotate(${125+110*S.fuel/100} 354 138)`);
+  const o=String(Math.floor(S.odo)).padStart(6,'0').slice(-6)+'.'+Math.floor(S.odo*10)%10;if(o!=po){po=o;l1.textContent=o.slice(0,6);l2.textContent=o[7]}}};
+/* ---------- Activa cluster ---------- */
+const bC=()=>{const Q=(r,a,cx=150,cy=175)=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)];
+ let h=`<svg id="ac" class="ac" viewBox="0 0 400 240"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#30343c"/><stop offset="1" stop-color="#16181d"/></linearGradient></defs>
+<rect x="6" y="14" width="388" height="216" rx="62" fill="#101215" stroke="#3a3e46" stroke-width="2"/><rect class="lens" x="24" y="34" width="352" height="186" rx="52" fill="url(#cg)" stroke="#555a64" stroke-width="2"/><path d="M60 50Q200 30 340 50" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="3"/>`;
+ const rd=['#ff9a8a','#ff7a68','#ff5a48','#ff3b2f','#e82a20','#d01c14'];
+ for(let k=0;k<20;k++){const col=k>=6&&k<=9?'#35c76a':k>=14?rd[k-14]:'#e8eaee';h+=`<path class="sg" d="${ap(150,175,82,175+9.5*k+1,175+9.5*(k+1)-1)}" fill="none" stroke="${col}" stroke-width="13"/>`}
+ h+=`<path d="${ap(150,175,68,175,365)}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1"/>`;
+ for(let i=0;i<=100;i+=20){const p=Q(104,175+1.9*i);h+=`<text class="an" x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="middle" font-size="14">${i}</text>`}
+ h+=`<text class="an" x="150" y="116" text-anchor="middle" font-size="8">km</text><text class="an" x="240" y="212" text-anchor="middle" font-size="13">${cu().l}</text>`;
+ for(let i=0;i<6;i++)h+=`<rect x="${120+i*10}" y="121" width="10" height="16" fill="${i==5?'#f2f2f2':'#0b0b0d'}" stroke="#555" stroke-width=".5"/><text class="ot${i==5?' l':''}" x="${125+i*10}" y="133" text-anchor="middle" font-size="11">0</text>`;
+ for(let k=0;k<7;k++){h+=`<path class="fs" d="${ap(318,190,46,205+130*k/7+1.5,205+130*(k+1)/7-1.5)}" fill="none" stroke="#e8eaee" stroke-width="7"/>`}
+ h+=`<text class="an" x="272" y="162" text-anchor="end" font-size="12">E</text><text class="an" x="366" y="162" font-size="12">F</text>
+<rect x="345" y="198" width="9" height="13" rx="1.5" fill="none" stroke="#e8eaee" stroke-width="1.6"/><path d="M354 202h3v6" fill="none" stroke="#e8eaee" stroke-width="1.6"/>
+<g id="cfn"><path d="M314 187L366 190L314 193Z" fill="#ff4a1c"/></g><circle cx="318" cy="190" r="9" fill="#23262b" stroke="#444" stroke-width="2"/>
+<path class="ia" d="M198 54h-8v-4l-9 8 9 8v-4h8z"/><circle cx="262" cy="58" r="7" fill="#1b1d21" stroke="#333"/><path class="ia" d="M290 54h8v-4l9 8-9 8v-4h-8z"/>
+<g id="cbeam" style="cursor:pointer"><circle cx="226" cy="58" r="22" fill="transparent"/><path class="ib" d="M226 50h2a8 8 0 0 1 0 16h-2zM220 52h-6M220 58h-7M220 64h-6" stroke-width="2" stroke-linecap="round"/></g>
+<g id="cnd"><path d="M136 175L146 171L240 175L146 179Z" fill="#ff4a1c"/></g><circle cx="150" cy="175" r="11" fill="#23262b" stroke="#555" stroke-width="2"/></svg>`;return h};
+const uC=()=>{const nd=$('#cnd'),fn=$('#cfn'),sv=$('#ac'),ot=$$('#ac .ot');let po='';sv.classList.toggle('lit',!!S.al);
+ $('#cbeam').onclick=()=>{S.al=!S.al;save();sv.classList.toggle('lit',S.al);vib()};
+ return v=>{nd.setAttribute('transform',`rotate(${175+190*Math.min(v,104)/100} 150 175)`);fn.setAttribute('transform',`rotate(${205+130*S.fuel/100} 318 190)`);
+  const o=String(Math.floor(S.odo*10)).padStart(6,'0').slice(-6);if(o!=po){po=o;ot.forEach((t,i)=>t.textContent=o[i])}}};
+let UP=null,SM=180;
+function build(){const av=S.theme=='aviator'&&S.style==0,wg=S.theme=='wagonr'&&S.style==0,ac=S.theme=='activa'&&S.style==0;SM=av?120:wg?180:ac?100:cu().m;$('#gauge').innerHTML=av?bA():wg?bW():ac?bC():B[S.style](SM);UP=av?uA():wg?uW():ac?uC():Us[S.style](SM);
+ $('#hint').textContent=av||ac?'Tap the beam icon to switch the backlight on or off':wg?'Tap the red warning icon to switch the backlight on or off':''}
 
-                        <!-- Digital Display -->
-                        <div id="digital-display" class="digital-mode">
-                            <div class="digital-speed-container">
-                                <span id="digital-speed" class="digital-speed">0</span>
-                                <span id="digital-unit" class="digital-unit">km/h</span>
-                            </div>
-                            <div class="digital-stats">
-                                <div class="digital-stat">
-                                    <span class="stat-label">AVG</span>
-                                    <span id="digital-avg" class="stat-value">0</span>
-                                </div>
-                                <div class="digital-stat">
-                                    <span class="stat-label">MAX</span>
-                                    <span id="digital-max" class="stat-value">0</span>
-                                </div>
-                                <div class="digital-stat">
-                                    <span class="stat-label">GPS</span>
-                                    <span id="digital-gps" class="stat-value">--</span>
-                                </div>
-                            </div>
-                        </div>
+/* ---------- GPS & trip logic ---------- */
+let wid=null,sc=0;
+const hav=(a,b,c,d)=>{const R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,k=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(k))};
+function step(d,dt,v,acc){if(acc>60||dt<=0||dt>30)return;const t=S.tr;t.t+=dt;if(v>.8){t.d+=d;S.odo+=d/1000;t.mt+=dt;t.mx=Math.max(t.mx,v)}
+ G.hist.push(v>.8?v:0);if(G.hist.length>90)G.hist.shift();if(++sc%5==0)save()}
+function onPos(p){const c=p.coords,t=p.timestamp;let v=c.speed;
+ if(G.last&&G.last.lat!=null){const dt=(t-G.last.t)/1000,d=hav(G.last.lat,G.last.lon,c.latitude,c.longitude);if(v==null||isNaN(v))v=dt>0?d/dt:0;step(d,dt,v,c.accuracy)}
+ else if(v==null||isNaN(v))v=0;
+ G.last={lat:c.latitude,lon:c.longitude,t};G.acc=c.accuracy;G.alt=c.altitude;if(c.heading!=null&&!isNaN(c.heading))G.hd=c.heading;
+ G.tv=v>.8?v:0;G.status='GPS \u00b1'+Math.round(c.accuracy)+' m'}
+function startGPS(){if(S.sim||wid!=null)return;if(!navigator.geolocation){G.status='No GPS here';return}
+ G.status='Searching\u2026';wid=navigator.geolocation.watchPosition(onPos,e=>{G.status=e.code==1?'GPS blocked':'No signal'},{enableHighAccuracy:true,maximumAge:0,timeout:20000})}
+function stopGPS(){if(wid!=null)navigator.geolocation.clearWatch(wid);wid=null;G.tv=0;G.status='GPS off'}
+$('#gps').onclick=()=>{if(S.sim)return;wid==null?startGPS():stopGPS()};
+let sv=0,tg=0;setInterval(()=>{if(!S.sim)return;if(Math.random()<.15)tg=Math.random()<.2?0:10+Math.random()*28;sv+=(tg-sv)*.2;
+ step(sv,1,sv,5);G.tv=sv<.8?0:sv;G.hd=((G.hd||0)+(Math.random()-.5)*12+360)%360;G.alt=215+Math.sin(Date.now()/9e3)*8;G.acc=5;G.last={t:Date.now()};G.status='Simulation'},1000);
+function resetTrip(){S.tr={d:0,t:0,mt:0,mx:0};G.hist=[];save()}
+function setOdo(){const v=parseFloat($('#oin').value);if(!isNaN(v)&&v>=0){S.odo=v;save()}}
 
-                        <!-- Minimalist Display -->
-                        <div id="minimalist-display" class="minimalist-mode">
-                            <span id="minimal-speed" class="minimal-speed">0</span>
-                            <span id="minimal-unit" class="minimal-unit">km/h</span>
-                            <div id="minimal-gps-dot" class="minimal-gps-dot"></div>
-                        </div>
+/* ---------- UI ---------- */
+let lastBeep=0,ac=null;
+function beep(){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;g.gain.value=.15;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.18);navigator.vibrate&&navigator.vibrate([80,40,80])}catch(e){}}
+const TT=['Speed','Trip','Styles','Settings'];
+function go(i){$$('section').forEach((s,k)=>s.classList.toggle('on',k==i));$$('nav button').forEach((b,k)=>b.classList.toggle('on',k==i));$('#ttl').textContent=TT[i];vib()}
+$$('nav button').forEach(b=>b.onclick=()=>go(+b.dataset.i));
+const SD=[['dist','Trip distance'],['time','Trip time'],['mov','Moving time'],['avg','Average'],['mavg','Moving average'],['max','Top speed'],['alt','Altitude'],['hd','Heading'],['acc','GPS accuracy'],['odo','Odometer']];
+$('#sg2').innerHTML=SD.map(([k,l])=>`<div class="st"><b data-s="${k}">-</b><span>${l}</span></div>`).join('');
+function ui(){document.documentElement.dataset.theme=S.theme;$('meta[name=theme-color]').content=S.theme=='light'?'#f2f3f7':'#000000';
+ $('#sl').innerHTML=NAMES.map((n,i)=>`<button class="opt ${S.style==i?'on':''}" onclick="S.style=${i};save();ui();build()">${i==0&&S.theme=='aviator'?'Aviator cluster':i==0&&S.theme=='wagonr'?'WagonR cluster':i==0&&S.theme=='activa'?'Activa cluster':n}</button>`).join('');
+ $('#tl').innerHTML=['dark','light','aviator','wagonr','activa'].map(t=>`<button class="opt ${S.theme==t?'on':''}" onclick="S.theme='${t}';save();ui();build()">${t=='wagonr'?'WagonR':t[0].toUpperCase()+t.slice(1)}</button>`).join('');
+ $('#ul').innerHTML=Object.keys(U).map(k=>`<button class="${S.unit==k?'on':''}" onclick="S.unit='${k}';save();ui();build()">${U[k].l}</button>`).join('');
+ $('#lim').value=S.limit;$('#lv').textContent=S.limit?S.limit+' '+cu().l:'Off';$('#wk').checked=S.wake;$('#sm').checked=S.sim;$('#fu').value=S.fuel;$('#fv').textContent=S.fuel+'%'}
+$('#lim').oninput=e=>{S.limit=+e.target.value;save();$('#lv').textContent=S.limit?S.limit+' '+cu().l:'Off'};
+$('#fu').oninput=e=>{S.fuel=+e.target.value;save();$('#fv').textContent=S.fuel+'%'};
+$('#sm').onchange=e=>{S.sim=e.target.checked;save();if(S.sim){stopGPS();G.last=null}else{G.tv=0;G.status='GPS off';startGPS()}};
+let wl=null;async function wake(){try{if(S.wake&&navigator.wakeLock)wl=await navigator.wakeLock.request('screen');else if(wl){wl.release();wl=null}}catch(e){}}
+$('#wk').onchange=e=>{S.wake=e.target.checked;save();wake()};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='visible')wake()});
 
-                        <!-- HUD Display -->
-                        <div id="hud-display" class="hud-mode">
-                            <div class="hud-speed-container">
-                                <span id="hud-speed" class="hud-speed">0</span>
-                                <span id="hud-unit" class="hud-unit">km/h</span>
-                            </div>
-                            <div class="hud-indicator">
-                                <span id="hud-status" class="hud-status">GPS ACTIVE</span>
-                            </div>
-                        </div>
+function stats(){const u=cu(),t=S.tr,hd=G.hd,V={dist:(t.d*u.d).toFixed(2)+' '+u.dl,time:hms(t.t),mov:hms(t.mt),avg:(t.t>0?t.d/t.t*u.f:0).toFixed(0)+' '+u.l,mavg:(t.mt>0?t.d/t.mt*u.f:0).toFixed(0)+' '+u.l,max:(t.mx*u.f).toFixed(0)+' '+u.l,
+ alt:G.alt!=null?Math.round(G.alt)+' m':'-',hd:hd!=null?Math.round(hd)+'\u00b0 '+['N','NE','E','SE','S','SW','W','NW'][Math.round(hd/45)%8]:'-',acc:G.acc!=null?'\u00b1'+Math.round(G.acc)+' m':'-',odo:S.odo.toFixed(1)+' km'};
+ $$('[data-s]').forEach(e=>{if(e.dataset.s in V)e.textContent=V[e.dataset.s]});
+ const g=$('#gps');g.textContent=G.status;g.classList.toggle('ok',/\u00b1|Sim/.test(G.status));
+ const h=G.hist,mx=Math.max(10,...h);$('#spk').setAttribute('points',h.map((v,i)=>`${i*300/89},${75-v/mx*70}`).join(' '))}
+let DV=0,fr=0;
+function loop(){const now=Date.now();if(!S.sim&&G.last&&now-G.last.t>8000)G.tv=0;DV+=(G.tv-DV)*.12;if(G.tv==0&&DV<.05)DV=0;
+ const v=DV*cu().f;UP&&UP(v);const ov=S.limit>0&&v>S.limit;$('#gauge').classList.toggle('over',ov);if(ov&&now-lastBeep>3000){lastBeep=now;beep()}
+ if(++fr%15==0)stats();requestAnimationFrame(loop)}
 
-                        <!-- Graph Display -->
-                        <div id="graph-display" class="graph-mode">
-                            <canvas id="speed-graph" class="speed-graph"></canvas>
-                            <div class="graph-overlay">
-                                <span id="graph-current-speed" class="graph-current-speed">0 km/h</span>
-                            </div>
-                        </div>
+/* ---------- PWA: manifest + service worker ---------- */
+try{const ic="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101820"/><path d="M12 44a20 20 0 1 1 40 0" fill="none" stroke="#3b9cff" stroke-width="5"/><path d="M32 44l10-16" stroke="#ff3b30" stroke-width="4"/></svg>');
+ const m={name:'Speedometer+',short_name:'Speedo+',display:'standalone',orientation:'portrait',start_url:location.href,background_color:'#000000',theme_color:'#000000',icons:[{src:ic,sizes:'any',type:'image/svg+xml',purpose:'any'}]};
+ const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));document.head.appendChild(l)}catch(e){}
+/* Service worker source (network-first, cache fallback). Browsers refuse blob: workers, so save this as sw.js next to the page when you self-host it. */
+const SW="self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{if(e.request.method!='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open('spx1').then(k=>k.put(e.request,c));return r}).catch(()=>caches.match(e.request)))})";
+try{if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 
-                        <!-- Compass Display -->
-                        <div id="compass-display" class="compass-mode">
-                            <div class="compass-rose">
-                                <svg viewBox="0 0 200 200">
-                                    <circle class="compass-circle" cx="100" cy="100" r="90"></circle>
-                                    <text class="compass-n" x="100" y="30" text-anchor="middle">N</text>
-                                    <text class="compass-e" x="170" y="105" text-anchor="middle">E</text>
-                                    <text class="compass-s" x="100" y="180" text-anchor="middle">S</text>
-                                    <text class="compass-w" x="30" y="105" text-anchor="middle">W</text>
-                                    <polygon id="compass-arrow" class="compass-arrow" points="100,20 110,50 100,45 90,50"></polygon>
-                                </svg>
-                            </div>
-                            <div class="compass-speed">
-                                <span id="compass-speed-value" class="compass-speed-value">0</span>
-                                <span id="compass-speed-unit" class="compass-speed-unit">km/h</span>
-                            </div>
-                            <div id="compass-heading" class="compass-heading">--°</div>
-                        </div>
-                    </div>
-
-                    <!-- Overspeed Warning -->
-                    <div id="overspeed-warning" class="overspeed-warning hidden">
-                        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                            <line x1="12" y1="9" x2="12" y2="13"></line>
-                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-                        <span class="warning-text">OVERSPEED!</span>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="quick-actions">
-                        <button id="quick-start-trip" class="quick-action-btn" aria-label="Start new trip">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                            </svg>
-                            <span>Start Trip</span>
-                        </button>
-                        <button id="copy-speed-btn" class="quick-action-btn" aria-label="Copy speed">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                            <span>Copy</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Trip Tab -->
-            <section id="trip-tab" class="tab-content">
-                <div class="trip-container">
-                    <!-- Trip Controls -->
-                    <div class="trip-controls">
-                        <div class="odometer-display">
-                            <span class="odometer-label">Lifetime</span>
-                            <span id="lifetime-distance" class="odometer-value">0.00</span>
-                            <span id="lifetime-unit" class="odometer-unit">km</span>
-                        </div>
-                        <div class="trip-buttons">
-                            <button id="start-trip-btn" class="trip-btn start-btn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                <span>Start</span>
-                            </button>
-                            <button id="pause-trip-btn" class="trip-btn pause-btn hidden">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="6" y="4" width="4" height="16"></rect>
-                                    <rect x="14" y="4" width="4" height="16"></rect>
-                                </svg>
-                                <span>Pause</span>
-                            </button>
-                            <button id="resume-trip-btn" class="trip-btn resume-btn hidden">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                <span>Resume</span>
-                            </button>
-                            <button id="stop-trip-btn" class="trip-btn stop-btn hidden">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="6" y="6" width="12" height="12"></rect>
-                                </svg>
-                                <span>Stop</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Active Trip Info -->
-                    <div id="active-trip-info" class="active-trip-info hidden">
-                        <div class="trip-stat-grid">
-                            <div class="trip-stat">
-                                <span class="trip-stat-label">Distance</span>
-                                <span id="trip-distance" class="trip-stat-value">0.00</span>
-                                <span id="trip-distance-unit" class="trip-stat-unit">km</span>
-                            </div>
-                            <div class="trip-stat">
-                                <span class="trip-stat-label">Duration</span>
-                                <span id="trip-duration" class="trip-stat-value">00:00:00</span>
-                            </div>
-                            <div class="trip-stat">
-                                <span class="trip-stat-label">Avg Speed</span>
-                                <span id="trip-avg-speed" class="trip-stat-value">0</span>
-                                <span class="trip-stat-unit">km/h</span>
-                            </div>
-                            <div class="trip-stat">
-                                <span class="trip-stat-label">Max Speed</span>
-                                <span id="trip-max-speed" class="trip-stat-value">0</span>
-                                <span class="trip-stat-unit">km/h</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Trip List -->
-                    <div class="trip-list-section">
-                        <div class="section-header">
-                            <h2 class="section-title">Trip History</h2>
-                            <div class="section-actions">
-                                <button id="filter-trips-btn" class="filter-btn" aria-label="Filter trips">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                                    </svg>
-                                </button>
-                                <button id="search-trips-btn" class="search-btn" aria-label="Search trips">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="trip-list" class="trip-list">
-                            <!-- Trip items will be inserted here -->
-                        </div>
-                        <div id="trip-list-empty" class="trip-list-empty hidden">
-                            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                            </svg>
-                            <p>No trips yet. Start your first trip!</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Stats Tab -->
-            <section id="stats-tab" class="tab-content">
-                <div class="stats-container">
-                    <!-- Time Filter -->
-                    <div class="time-filter">
-                        <button class="filter-chip active" data-period="all">All Time</button>
-                        <button class="filter-chip" data-period="30d">30 Days</button>
-                        <button class="filter-chip" data-period="7d">7 Days</button>
-                        <button class="filter-chip" data-period="today">Today</button>
-                    </div>
-
-                    <!-- Overview Stats -->
-                    <div class="stats-overview">
-                        <div class="overview-card">
-                            <span class="overview-label">Total Distance</span>
-                            <span id="stats-total-distance" class="overview-value">0.00</span>
-                            <span id="stats-distance-unit" class="overview-unit">km</span>
-                        </div>
-                        <div class="overview-card">
-                            <span class="overview-label">Total Time</span>
-                            <span id="stats-total-time" class="overview-value">0h</span>
-                        </div>
-                        <div class="overview-card">
-                            <span class="overview-label">Total Trips</span>
-                            <span id="stats-total-trips" class="overview-value">0</span>
-                        </div>
-                        <div class="overview-card">
-                            <span class="overview-label">Avg Speed</span>
-                            <span id="stats-avg-speed" class="overview-value">0</span>
-                            <span class="overview-unit">km/h</span>
-                        </div>
-                        <div class="overview-card">
-                            <span class="overview-label">Max Speed</span>
-                            <span id="stats-max-speed" class="overview-value">0</span>
-                            <span class="overview-unit">km/h</span>
-                        </div>
-                    </div>
-
-                    <!-- Charts -->
-                    <div class="stats-charts">
-                        <div class="chart-card">
-                            <h3 class="chart-title">Distance per Day</h3>
-                            <canvas id="distance-chart" class="stats-chart"></canvas>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">Speed Distribution</h3>
-                            <canvas id="speed-chart" class="stats-chart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Insights -->
-                    <div class="insights-section">
-                        <h3 class="insights-title">Insights</h3>
-                        <div class="insights-grid">
-                            <div class="insight-card">
-                                <span class="insight-label">Fastest Trip</span>
-                                <span id="insight-fastest" class="insight-value">--</span>
-                            </div>
-                            <div class="insight-card">
-                                <span class="insight-label">Longest Trip</span>
-                                <span id="insight-longest" class="insight-value">--</span>
-                            </div>
-                            <div class="insight-card">
-                                <span class="insight-label">Most Active Day</span>
-                                <span id="insight-active" class="insight-value">--</span>
-                            </div>
-                            <div class="insight-card">
-                                <span class="insight-label">Trips/Week</span>
-                                <span id="insight-trips-week" class="insight-value">--</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Export -->
-                    <div class="export-section">
-                        <button id="export-stats-csv" class="export-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            <span>Export CSV</span>
-                        </button>
-                        <button id="export-stats-json" class="export-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            <span>Export JSON</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Settings Tab -->
-            <section id="settings-tab" class="tab-content">
-                <div class="settings-container">
-                    <!-- GPS Settings -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">GPS & Tracking</h3>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">High Accuracy Mode</span>
-                                <span class="settings-item-desc">Use precise GPS (more battery)</span>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="high-accuracy-toggle" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Auto-pause Threshold</span>
-                                <span class="settings-item-desc">Pause when stopped for N seconds</span>
-                            </div>
-                            <input type="number" id="auto-pause-threshold" class="settings-input" value="10" min="5" max="60">
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Min Accuracy Filter</span>
-                                <span class="settings-item-desc">Ignore GPS points worse than N meters</span>
-                            </div>
-                            <input type="number" id="min-accuracy-filter" class="settings-input" value="50" min="10" max="500">
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Speed Smoothing</span>
-                                <span class="settings-item-desc">Average over last N samples</span>
-                            </div>
-                            <input type="number" id="speed-smoothing" class="settings-input" value="5" min="1" max="20">
-                        </div>
-                        <button id="refresh-gps-btn" class="settings-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <polyline points="1 20 1 14 7 14"></polyline>
-                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                            </svg>
-                            <span>Refresh GPS</span>
-                        </button>
-                    </div>
-
-                    <!-- Speedometer Settings -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">Speedometer</h3>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Gauge Max Speed</span>
-                                <span class="settings-item-desc">Maximum value on analogue gauge</span>
-                            </div>
-                            <select id="gauge-max-speed" class="settings-select">
-                                <option value="120">120 km/h</option>
-                                <option value="160" selected>160 km/h</option>
-                                <option value="200">200 km/h</option>
-                                <option value="240">240 km/h</option>
-                            </select>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Color Theme</span>
-                                <span class="settings-item-desc">Gauge color scheme</span>
-                            </div>
-                            <select id="gauge-theme" class="settings-select">
-                                <option value="blue">Blue</option>
-                                <option value="red">Red</option>
-                                <option value="green">Green</option>
-                                <option value="purple">Purple</option>
-                                <option value="orange">Orange</option>
-                            </select>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Needle Style</span>
-                                <span class="settings-item-desc">Analogue gauge needle</span>
-                            </div>
-                            <select id="needle-style" class="settings-select">
-                                <option value="classic">Classic</option>
-                                <option value="modern">Modern</option>
-                                <option value="dot">Dot</option>
-                            </select>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Font Size</span>
-                                <span class="settings-item-desc">Digital display text size</span>
-                            </div>
-                            <input type="range" id="font-size-slider" class="settings-slider" min="24" max="72" value="48">
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">HUD Mirror Mode</span>
-                                <span class="settings-item-desc">Flip display horizontally</span>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="hud-mirror-toggle">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Units & Alarms -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">Units & Alarms</h3>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Speed Units</span>
-                                <span class="settings-item-desc">Display speed in km/h or mph</span>
-                            </div>
-                            <div class="unit-toggle">
-                                <button class="unit-btn active" data-unit="kmh">km/h</button>
-                                <button class="unit-btn" data-unit="mph">mph</button>
-                            </div>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Speed Alarm</span>
-                                <span class="settings-item-desc">Alert when exceeding threshold</span>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="alarm-enable-toggle" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Alarm Threshold</span>
-                                <span class="settings-item-desc">Speed limit for alarm</span>
-                            </div>
-                            <input type="number" id="alarm-threshold" class="settings-input" value="40" min="10" max="200">
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Alarm Sound</span>
-                                <span class="settings-item-desc">Beep pattern</span>
-                            </div>
-                            <select id="alarm-sound" class="settings-select">
-                                <option value="single">Single Beep</option>
-                                <option value="double">Double Beep</option>
-                                <option value="continuous">Continuous</option>
-                            </select>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Vibration</span>
-                                <span class="settings-item-desc">Haptic feedback on alarm</span>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="vibration-toggle" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <button id="test-alarm-btn" class="settings-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
-                            <span>Test Alarm</span>
-                        </button>
-                    </div>
-
-                    <!-- Data Management -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">Data Management</h3>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Database Size</span>
-                                <span id="db-size" class="settings-item-value">--</span>
-                            </div>
-                        </div>
-                        <button id="export-all-data" class="settings-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            <span>Export All Data</span>
-                        </button>
-                        <button id="import-data-btn" class="settings-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <span>Import Data</span>
-                        </button>
-                        <input type="file" id="import-file-input" class="hidden" accept=".json">
-                        <button id="clear-all-data" class="settings-btn danger">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                <line x1="10" y1="11" x2="10" y2="17"></line>
-                                <line x1="14" y1="11" x2="14" y2="17"></line>
-                            </svg>
-                            <span>Clear All Data</span>
-                        </button>
-                    </div>
-
-                    <!-- Appearance -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">Appearance</h3>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Theme</span>
-                                <span class="settings-item-desc">Light, dark, or auto</span>
-                            </div>
-                            <select id="theme-select" class="settings-select">
-                                <option value="auto">Auto</option>
-                                <option value="light">Light</option>
-                                <option value="dark">Dark</option>
-                            </select>
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Accent Color</span>
-                                <span class="settings-item-desc">UI highlight color</span>
-                            </div>
-                            <input type="color" id="accent-color" class="settings-color" value="#6366f1">
-                        </div>
-                        <div class="settings-item">
-                            <div class="settings-item-content">
-                                <span class="settings-item-label">Reduced Motion</span>
-                                <span class="settings-item-desc">Minimize animations</span>
-                                <a href="https://supermanmubashir-png.github.io/SpeedometerPlus/2.html" class="button-style">TRY SECOND VERSION WITH AVIATOR MODE</a>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="reduced-motion-toggle">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- About -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">About</h3>
-                        <div class="about-info">
-                            <p class="about-version">Version 1.0.0</p>
-                            <p class="about-build">Build: October 2026</p>
-                            <p class="about-desc">GPS-based Speedometer PWA</p>
-                            <p class="about-note">All data stored locally in your browser. No backend required.</p>
-                        </div>
-                        <button id="privacy-policy-btn" class="settings-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            </svg>
-                            <span>Privacy Policy</span>
-                        </button>
-                        <button id="help-faq-btn" class="settings-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                            </svg>
-                            <span>Help & FAQ</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Floating Bottom Navigation -->
-        <nav class="bottom-nav">
-            <div class="nav-container">
-                <button class="nav-item active" data-tab="speed" aria-label="Speed">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polygon points="12 6 16 14 8 14 12 6"></polygon>
-                    </svg>
-                    <span class="nav-label">Speed</span>
-                </button>
-                <button class="nav-item" data-tab="trip" aria-label="Trip">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                    <span class="nav-label">Trip</span>
-                </button>
-                <button class="nav-item" data-tab="stats" aria-label="Stats">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="20" x2="18" y2="10"></line>
-                        <line x1="12" y1="20" x2="12" y2="4"></line>
-                        <line x1="6" y1="20" x2="6" y2="14"></line>
-                    </svg>
-                    <span class="nav-label">Stats</span>
-                </button>
-                <button class="nav-item" data-tab="settings" aria-label="Settings">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    <span class="nav-label">Settings</span>
-                </button>
-            </div>
-        </nav>
-    </div>
-
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container"></div>
-
-    <!-- Modal Container -->
-    <div id="modal-container" class="modal-container hidden"></div>
-
-    <!-- Scripts -->
-    <script src="js/db.js"></script>
-    <script src="js/gps.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/trips.js"></script>
-    <script src="js/stats.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/main.js"></script>
-
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registered:', reg.scope))
-                    .catch(err => console.log('SW registration failed:', err));
-            });
-        }
-    </script>
-
-<footer> <a href="https://supermanmubashir-png.github.io/SpeedometerPlus/2.html" class="button-style">EXPLORE SECOND VERSION WITH AVIATOR MODE</a>  </footer>
-    
+ui();build();go(0);if(S.sim)G.status='Simulation';else startGPS();wake();loop();
+</script>
 </body>
 </html>
